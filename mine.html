@@ -2,59 +2,74 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<title>Javascript版扫雷</title>
+<title>Javascript经典游戏扫雷</title>
 <style>
-	input{ margin:0; padding:0;}
-	input{ outline:none;}
-	#game_box{ width:400px; height:430px; margin:100px auto; border:#333 1px solid; background:#ccc -webkit-repeating-linear-gradient(top,#ccc,#000);background:#ccc -moz-repeating-linear-gradient(top,#ccc,#000);background:#ccc -o-repeating-linear-gradient(top,#ccc,#000);background:#ccc -ms-repeating-linear-gradient(top,#ccc,#000); box-shadow:0 0 50px 10px #333; box-shadow:0 0 50px 10px #333; filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#CBCBCB', endColorstr='#000000'); }
-	#map{width:400px; height:348px;*height:380px;}
-	#time{ height:18px; line-height:22px; text-align:center;margin:6px 0; margin-top:10px; _margin-top:40px; color:#fff; position:relative;}
-	#time input{ width:40px; height:18px;  line-height:18px; text-align:center;}
-	#table_map{ width:336px; height:336px;  border:none; border-left:#000 1px solid;border-top:#000 1px solid; margin:32px 32px 0px 32px; background:#D8ECF6; text-align:center; border-collapse: collapse}
-	#table_map td{ width:20px; height:20px; border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; color:#333333; transition:all 0.7s; cursor:pointer;}
-	#table_map td.mask{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; background:#333; }
-	#table_map td.over{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; }
-	.over_bg{ background:#E1E1E1;}
-	@-webkit-keyframes round{
-		from{ -webkit-transform:rotateX(0);}
-		to{ -webkit-transform:rotateX(360deg);}	
-	}
-	@-webkit-keyframes show{
-		from{ -webkit-transform:rotateX(180deg) rotateY(0) scale(0);}
-		to{ -webkit-transform:rotateX(360deg) rotateY(360deg) scale(1);}	
-	}
-	#game_box{-webkit-animation:show 3s;}
+body{background:#ccc;}
+input{ margin:0; padding:0;}
+input{ outline:none;}
+#mine_box{margin:30px auto;position: absolute; border:#333 1px solid; background:#ccc -webkit-repeating-linear-gradient(top,#ccc,#000);background:#ccc -moz-repeating-linear-gradient(top,#ccc,#000);background:#ccc -o-repeating-linear-gradient(top,#ccc,#000);background:#ccc -ms-repeating-linear-gradient(top,#ccc,#000); box-shadow:0 0 50px 10px #333; box-shadow:0 0 50px 10px #333; filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#CBCBCB', endColorstr='#000000'); }
+#map{float: left;}
+#time{ height:28px;float: left; line-height:22px; text-align:center;margin:6px 0; margin-top:10px; _margin-top:40px; color:#fff; position:relative;margin-top: 32px; text-align: left; line-height: 36px; padding-right: 24px;}
+#time input{ width:40px; height:18px;  line-height:18px; text-align:center; vertical-align: 2px;}
+#table_map{border:none; border-left:#000 1px solid;border-top:#000 1px solid; margin:32px 16px 32px 32px; background:#D8ECF6; text-align:center; border-collapse: collapse}
+#table_map td{ width:20px; height:20px; border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; color:#333333; transition:all 0.7s; cursor:pointer;}
+#table_map td.mask{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; background:#333; }
+#table_map td.over{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; }
+.over_bg{ background:#E1E1E1;}
+@-webkit-keyframes round{
+	from{ -webkit-transform:rotateX(0);}
+	to{ -webkit-transform:rotateX(360deg);}	
+}
+@-webkit-keyframes show{
+	from{ -webkit-transform:rotateX(180deg) rotateY(0) scale(0);}
+	to{ -webkit-transform:rotateX(360deg) rotateY(360deg) scale(1);}	
+}
+#mine_box{-webkit-animation:show 3s;}
 </style>
 </head>
 
 <body>
-<div id="game_box">
-	<div id="map">
-    	<!--<table cellpadding="0" cellspacing="0"></table>-->
-    </div>
-	<div id="time">时间：<input type="text" value="0" disabled="disabled" />&nbsp;&nbsp;炸弹：<input type="text" value="50" disabled="disabled" /></div>
+<div id="mine_box">
+	<div id="map"></div>
+	<div id="time">
+		难度：<select id="level"><option value="0">简单</option><option value="1">一般</option><option value="2">困难</option></select><br/>
+		时间：<input type="text" value="0" disabled="disabled" /> 秒<br/>
+		炸弹：<input type="text" value="50" disabled="disabled" />
+	</div>
 </div>
-
 <script>
+/*
+	by:王美建 于2014-4
+*/
 	window.onload=function()
-	{		
-		Game.init('game_box','map');  
+	{	
+		var level = document.getElementById("level"),
+			time = document.getElementById("time").getElementsByTagName("input")[0];
+		level.value = 0;
+		time.value = 0;
+		Mine.init(0);
+		level.onchange = function(){
+			Mine.init(this.value); 
+		}
 	}
-	var Game={
-		data : {   //关卡数据
-			mine : 40, col : 16, row : 16	
-		},
-		init : function(box_id,mapbox_id){  //初始化
-			this.oBox = document.getElementById(box_id);
-			this.mapBox = document.getElementById(mapbox_id)
-			this.mapBox.innerHTML = this.createMap(); 
+	var Mine={
+		data : [   //关卡数据
+			{mine : 20, col : 10, row : 10	},
+			{mine : 50, col : 16, row : 16	},
+			{mine : 100, col : 20, row : 20	}
+		],
+		init : function(level){  //初始化
+			this.oBox = document.getElementById("mine_box");
+			this.mapBox = document.getElementById("map")
+			this.mapData = this.data[level]; // 难度
+			this.mapBox.innerHTML = this.createMap();
 			this.oMap = this.mapBox.getElementsByTagName('table')[0];
 			this.aTd = this.oMap.getElementsByTagName('td');
 			this.time = document.getElementById('time').getElementsByTagName('input')[0];
 			this.mineNum = document.getElementById('time').getElementsByTagName('input')[1];
-			this.mineNum.value = this.data.mine;
+			this.mineNum.value = this.mapData.mine;
 			this.surplus = [];
-			this.iCount = this.data.col*this.data.row-this.data.mine;  
+			this.iCount = this.mapData.col*this.mapData.row-this.mapData.mine;  
 			this.createMine();
 			this.addVal();
 			this.play();
@@ -62,18 +77,18 @@
 		createMap : function()  //生成画布
 		{
 			var html = '';
-			var This = this.data;
+			var mapData = this.mapData;
 			var i=0,j=0;
 			function createTd()
 			{
 				var tds = '';
-				for(j = 0; j < This.row; j++)
+				for(j = 0; j < mapData.row; j++)
 				{
-					tds += '<td class = "mask" index='+ (This.col*i+j) +'></td>';	
+					tds += '<td class = "mask" index='+ (mapData.col*i+j) +'></td>';	
 				};
 				return tds;	
 			}
-			for(i = 0; i < This.col; i++)
+			for(i = 0; i < mapData.col; i++)
 			{
 				html += '<tr>' + createTd() + '</tr>';	
 			};
@@ -81,14 +96,14 @@
 		},
 		
 		createMine : function(){ //生成炸弹
-			var This = this.data;
+			var mapData = this.mapData;
 			this.indexArr = [];
 			this.mineArr = [];
-			for(var i = 0,j = This.col*This.row; i < j; i++ )       	
+			for(var i = 0,j = mapData.col*mapData.row; i < j; i++ )       	
 			{
 				this.indexArr.push(i) ;   //所有单元格的索引
 			};
-			for( var i = 0; i < This.mine; i++ ) //随机取出This.mine个做为炸弹的索引，不重复
+			for( var i = 0; i < mapData.mine; i++ ) //随机取出This.mine个做为炸弹的索引，不重复
 			{
 				var index = Math.round(Math.random()*(this.indexArr.length-1));  //索引
 				this.mineArr.push(this.indexArr.splice(index,1)[0]);
@@ -134,7 +149,7 @@
 				{
 					var num = 0;
 					var show = null;
-					var t = Math.ceil( 15*This.data.col*This.data.row/len );    //未打开格子越多，翻开时间间隔越短
+					var t = Math.ceil( 15*This.mapData.col*This.mapData.row/len );    //未打开格子越多，翻开时间间隔越短
 					show = setInterval(function(){
 						aTd[ This.surplus[num] ].className = 'over';
 						aTd[ This.surplus[num] ].style.webkitAnimation = 'round 1s 1';
@@ -146,7 +161,7 @@
 							aTd[ This.surplus[num] ].innerHTML = '';		
 						};
 						num++;
-						if(num == len)
+						if(num === len)
 						{
 							clearInterval(show);
 							alert(meg);	
@@ -157,7 +172,7 @@
 				{
 					var iCheck = 0;
 					This.surplus = [];
-					for( var i = 0,j = This.data.col*This.data.row; i < j; i++ )
+					for( var i = 0,j = This.mapData.col*This.mapData.row; i < j; i++ )
 					{
 						if( This.aTd[i].className == 'mask' )
 						{
@@ -172,9 +187,8 @@
 					This.count( parseInt(target.getAttribute('index')) );  //递归
 					target.style.webkitAnimation = 'round 1s 1';
 					if( This.iCount <= 10 )  //通关检测
-					{						
-						//console.log( 'iCheck='+iCheck+'iCount='+This.iCount )		
-						if( countSur() == This.data.mine )  //剩下格子数等于炸弹数而又没踩到炸弹，可不就是过关了
+					{							
+						if( countSur() == This.mapData.mine )  //剩下格子数等于炸弹数而又没踩到炸弹，可不就是过关了
 						{		
 							clearInterval( This.timer );
 							This.time.style.webkitAnimation = '';	  //停止计时器翻转
@@ -198,23 +212,19 @@
 					countSur();
 					openTd( aTd,'小朋友，你输了~',This.surplus.length );					
 				};
-			};
-			
-			for( var i = 0; i < this.aTd.length; i++ )
-			{
-				if(this.aTd[i].hasMine)
-				{
-					//this.aTd[i].style.background = 'red';   //作弊专用
-				}	
-			}	
+			};	
 		},
 		findIndex  : function(arr,ele)  //找到数组某个元素在数组中的位置
 		{
+			if("indexOf" in arr){
+				return arr.indexOf(ele);
+			}
 			for(var i=0,j=arr.length;i<j;i++)
 			{
 				if(ele === arr[i])
 				{
-					return i;	
+					return i;
+					break;	
 				};
 			};
 			return -1;
@@ -223,7 +233,10 @@
 		{
 			var arr = [];  //事件源周围的格子索引
 			var iNum = 0;  //事件源周围炸弹个数
-			var len = this.data.col; 
+			var len = this.mapData.col; 
+			var arr = [],  //事件源周围的格子索引
+				iNum = 0,  //事件源周围炸弹个数
+				len = this.mapData.col; 
 			if( iNow % len == 0 )   //点击最左边的格子时
 			{
 				arr = [iNow+1,iNow-len,iNow-len+1,iNow+len,iNow+len+1];
