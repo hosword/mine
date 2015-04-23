@@ -16,15 +16,6 @@ input{ outline:none;}
 #table_map td.mask{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; background:#333; }
 #table_map td.over{ border:none;border-right:#000 1px solid;border-bottom:#000 1px solid; }
 .over_bg{ background:#E1E1E1;}
-@-webkit-keyframes round{
-	from{ -webkit-transform:rotateX(0);}
-	to{ -webkit-transform:rotateX(360deg);}	
-}
-@-webkit-keyframes show{
-	from{ -webkit-transform:rotateX(180deg) rotateY(0) scale(0);}
-	to{ -webkit-transform:rotateX(360deg) rotateY(360deg) scale(1);}	
-}
-#mine_box{-webkit-animation:show 3s;}
 </style>
 </head>
 
@@ -49,6 +40,8 @@ input{ outline:none;}
 		time.value = 0;
 		Mine.init(0);
 		level.onchange = function(){
+			time.value = 0;
+			clearInterval(Mine.timer)
 			Mine.init(this.value); 
 		}
 	}
@@ -141,7 +134,6 @@ input{ outline:none;}
 				{
 					This.timeOnoff = true;
 					This.timer=setInterval(function(){						
-						This.time.style.webkitAnimation = 'round 1s infinite';	  //计时器翻转
 						This.time.value++;  
 					},1000)	
 				};			
